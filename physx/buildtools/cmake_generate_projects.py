@@ -162,7 +162,7 @@ class CMakePreset:
         elif self.targetPlatform == 'android':
             outString = outString + '-G \"MinGW Makefiles\"'
         elif self.targetPlatform == 'linux':
-            outString = outString + '-G \"Unix Makefiles\"'
+            outString = outString + '-G \"Unix Makefiles\" -DCMAKE_EXPORT_COMPILE_COMMANDS=1'
         elif self.targetPlatform == 'linuxAarch64':
             outString = outString + '-G \"Unix Makefiles\"'
 
