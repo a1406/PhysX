@@ -50,11 +50,11 @@
 #include <new>
 
 // Allocation macros going through user allocator
-#if PX_CHECKED
-	#define PX_ALLOC(n, name) physx::shdfnd::NamedAllocator(name).allocate(n, __FILE__, __LINE__)
-#else
+//#if PX_CHECKED
+//	#define PX_ALLOC(n, name) physx::shdfnd::NamedAllocator(name).allocate(n, __FILE__, __LINE__)
+//#else
 	#define PX_ALLOC(n, name) physx::shdfnd::NonTrackingAllocator().allocate(n, __FILE__, __LINE__)
-#endif
+//#endif
 #define PX_ALLOC_TEMP(n, name) PX_ALLOC(n, name)
 #define PX_FREE(x) physx::shdfnd::NonTrackingAllocator().deallocate(x)
 #define PX_FREE_AND_RESET(x)	\
@@ -91,7 +91,7 @@
 #define PX_PLACEMENT_NEW(p, T) new (p) T
 
 #if PX_DEBUG || PX_CHECKED
-	#define PX_USE_NAMED_ALLOCATOR 1
+	#define PX_USE_NAMED_ALLOCATOR 0
 #else
 	#define PX_USE_NAMED_ALLOCATOR 0
 #endif

@@ -315,8 +315,10 @@ SamplePlatform*		SampleFramework::createPlatform(SampleRenderer::RendererWindow*
 	return SamplePlatform::platform();
 }
 
+
 void* WindowsPlatform::initializeD3D9()
 {
+#ifdef RENDERER_ENABLE_DIRECT3D9
 	m_library   = 0;
 	if(m_hwnd)
 	{
@@ -343,8 +345,10 @@ void* WindowsPlatform::initializeD3D9()
 			}
 		}
 	}
+#endif
 	return m_d3d;
 }
+
 
 void WindowsPlatform::showCursor(bool show)
 {
@@ -888,6 +892,7 @@ physx::PxU32 WindowsPlatform::initializeD3D9Display(void * d3dPresentParameters,
 																physx::PxU32& height,
 																void * m_d3dDevice_out)
 {
+#ifdef RENDERER_ENABLE_DIRECT3D9
 	D3DPRESENT_PARAMETERS* m_d3dPresentParams = static_cast<D3DPRESENT_PARAMETERS*>(d3dPresentParameters);
 
 	UINT       adapter    = D3DADAPTER_DEFAULT;
@@ -963,6 +968,10 @@ physx::PxU32 WindowsPlatform::initializeD3D9Display(void * d3dPresentParameters,
 		m_d3dPresentParams, &m_d3dDevice);
 	*(static_cast<IDirect3DDevice9**>(m_d3dDevice_out)) = m_d3dDevice;
 	return res;
+#endif
+
+//	HRESULT res = 0;
+//	return res;
 }
 
 physx::PxU32 WindowsPlatform::D3D9Present()
