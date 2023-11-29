@@ -49,6 +49,7 @@ PxDefaultErrorCallback	gErrorCallback;
 
 PxFoundation*			gFoundation = NULL;
 PxPhysics*				gPhysics	= NULL;
+PxCooking* gCooking = NULL;
 
 PxDefaultCpuDispatcher*	gDispatcher = NULL;
 PxScene*				gScene		= NULL;
@@ -70,19 +71,45 @@ PxRigidDynamic* createDynamic(const PxTransform& t, const PxGeometry& geometry, 
 
 void createStack(const PxTransform& t, PxU32 size, PxReal halfExtent)
 {
-	PxShape* shape = gPhysics->createShape(PxBoxGeometry(halfExtent, halfExtent, halfExtent), *gMaterial);
-	for(PxU32 i=0; i<size;i++)
-	{
-		for(PxU32 j=0;j<size-i;j++)
-		{
-			PxTransform localTm(PxVec3(PxReal(j*2) - PxReal(size-i), PxReal(i*2+1), 0) * halfExtent);
-			PxRigidDynamic* body = gPhysics->createRigidDynamic(t.transform(localTm));
-			body->attachShape(*shape);
-			PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
-			gScene->addActor(*body);
-		}
-	}
-	shape->release();
+	PxVec3 convexVerts[] = { PxVec3(0,30,0),PxVec3(30,0,0),PxVec3(-30,0,0),PxVec3(0,0,30),
+	PxVec3(0,0,-30) };
+	PxConvexMeshDesc convexDesc;
+	convexDesc.points.count = 5;
+	convexDesc.points.stride = sizeof(PxVec3);
+	convexDesc.points.data = convexVerts;
+	convexDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
+
+	PxDefaultMemoryOutputStream buf;
+	PxConvexMeshCookingResult::Enum result;
+	if (!gCooking->cookConvexMesh(convexDesc, buf, &result))
+		return;
+	PxDefaultMemoryInputData input(buf.getData(), buf.getSize());
+	PxConvexMesh* convexMesh = gPhysics->createConvexMesh(input);
+
+//	PxShape* aConvexShape = PxRigidActorExt::createExclusiveShape(*aConvexActor,
+//		PxConvexMeshGeometry(convexMesh), *gMaterial);
+
+	PxRigidDynamic* convex = PxCreateDynamic(*gPhysics, t,
+		PxConvexMeshGeometry(convexMesh), *gMaterial, 20.0f);
+	gScene->addActor(*convex);
+	convexMesh->release();
+
+	halfExtent;
+	size;
+
+	//PxShape* shape = gPhysics->createShape(PxBoxGeometry(halfExtent, halfExtent, halfExtent), *gMaterial);
+	//for(PxU32 i=0; i<size;i++)
+	//{
+	//	for(PxU32 j=0;j<size-i;j++)
+	//	{
+	//		PxTransform localTm(PxVec3(PxReal(j*2) - PxReal(size-i), PxReal(i*2+1), 0) * halfExtent);
+	//		PxRigidDynamic* body = gPhysics->createRigidDynamic(t.transform(localTm));
+	//		body->attachShape(*shape);
+	//		PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
+	//		gScene->addActor(*body);
+	//	}
+	//}
+	//shape->release();
 }
 
 void initPhysics(bool interactive)
@@ -94,6 +121,8 @@ void initPhysics(bool interactive)
 	gPvd->connect(*transport,PxPvdInstrumentationFlag::eALL);
 
 	gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, PxTolerancesScale(),true,gPvd);
+
+	gCooking = PxCreateCooking(PX_PHYSICS_VERSION, *gFoundation, PxCookingParams(PxTolerancesScale()));
 
 	PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
 	sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
@@ -114,7 +143,7 @@ void initPhysics(bool interactive)
 	PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0,1,0,0), *gMaterial);
 	gScene->addActor(*groundPlane);
 
-	for(PxU32 i=0;i<5;i++)
+//	for(PxU32 i=0;i<5;i++)
 		createStack(PxTransform(PxVec3(0,0,stackZ-=10.0f)), 10, 2.0f);
 
 	if(!interactive)
